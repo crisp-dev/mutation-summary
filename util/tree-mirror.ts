@@ -42,6 +42,7 @@ interface TextData extends NodeData{
 class TreeMirror {
 
   private idMap:NumberMap<Node>;
+  private validAttributeRegex:RegExp = new RegExp(/([^\t\n\f \/>"'=]+)/);
 
   constructor(public root:Node, public delegate?:any) {
     this.idMap = {};
@@ -89,6 +90,11 @@ class TreeMirror {
       var node = <Element> this.deserializeNode(data);
       Object.keys(data.attributes).forEach((attrName) => {
         var newVal = data.attributes[attrName];
+
+        if (this.isValidAttributeName(attrName)) {
+           return;
+        }
+
         if (newVal === null) {
           node.removeAttribute(attrName);
         } else {
@@ -109,6 +115,10 @@ class TreeMirror {
     removed.forEach((node:NodeData) => {
       delete this.idMap[node.id];
     });
+  }
+
+  private isValidAttributeName(attributeName?:string):boolean {
+    return this.validAttributeRegex.test(attributeName);
   }
 
   private deserializeNode(nodeData:NodeData, parent?:Element):Node {
@@ -143,11 +153,15 @@ class TreeMirror {
           node = doc.createElement(nodeData.tagName);
 
         Object.keys(nodeData.attributes).forEach((name) => {
+          if (this.isValidAttributeName(name)) {
+            return;
+          }
           if (!this.delegate ||
             !this.delegate.setAttribute ||
             !this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
-            (<Element>node).setAttribute(name, nodeData.attributes[name]);
+            return;
           }
+          (<Element>node).setAttribute(name, nodeData.attributes[name]);
         });
 
         break;

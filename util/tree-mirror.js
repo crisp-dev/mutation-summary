@@ -3,6 +3,7 @@ var TreeMirror = (function () {
     function TreeMirror(root, delegate) {
         this.root = root;
         this.delegate = delegate;
+        this.validAttributeRegex = new RegExp(/([^\t\n\f \/>"'=]+)/);
         this.idMap = {};
     }
     TreeMirror.prototype.initialize = function (rootId, children) {
@@ -38,6 +39,9 @@ var TreeMirror = (function () {
             var node = _this.deserializeNode(data);
             Object.keys(data.attributes).forEach(function (attrName) {
                 var newVal = data.attributes[attrName];
+                if (_this.isValidAttributeName(attrName)) {
+                    return;
+                }
                 if (newVal === null) {
                     node.removeAttribute(attrName);
                 }
@@ -57,6 +61,9 @@ var TreeMirror = (function () {
         removed.forEach(function (node) {
             delete _this.idMap[node.id];
         });
+    };
+    TreeMirror.prototype.isValidAttributeName = function (attributeName) {
+        return this.validAttributeRegex.test(attributeName);
     };
     TreeMirror.prototype.deserializeNode = function (nodeData, parent) {
         var _this = this;
@@ -84,11 +91,15 @@ var TreeMirror = (function () {
                 if (!node)
                     node = doc.createElement(nodeData.tagName);
                 Object.keys(nodeData.attributes).forEach(function (name) {
+                    if (_this.isValidAttributeName(name)) {
+                        return;
+                    }
                     if (!_this.delegate ||
                         !_this.delegate.setAttribute ||
                         !_this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
-                        node.setAttribute(name, nodeData.attributes[name]);
+                        return;
                     }
+                    node.setAttribute(name, nodeData.attributes[name]);
                 });
                 break;
         }
@@ -104,7 +115,7 @@ var TreeMirror = (function () {
         return node;
     };
     return TreeMirror;
-})();
+}());
 var TreeMirrorClient = (function () {
     function TreeMirrorClient(target, mirror, testingQueries) {
         var _this = this;
@@ -253,4 +264,4 @@ var TreeMirrorClient = (function () {
         });
     };
     return TreeMirrorClient;
-})();
+}());
