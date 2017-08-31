@@ -185,6 +185,12 @@ class TreeMirrorClient {
 
   private mutationSummary:MutationSummary;
   private knownNodes:NodeMap<number>;
+  private javascriptTypes:string[] = [
+    "text/javascript",
+    "text/ecmascript",
+    "application/javascript",
+    "application/ecmascript"
+  ];
 
   constructor(public target:Node, public mirror:any, testingQueries:Query[]) {
     this.nextId = 1;
@@ -262,9 +268,14 @@ class TreeMirrorClient {
         var elm = <Element>node;
         data.tagName = elm.tagName;
         data.attributes = {};
+
         for (var i = 0; i < elm.attributes.length; i++) {
           var attr = elm.attributes[i];
           data.attributes[attr.name] = attr.value;
+        }
+
+        if (this.isJavascriptNode(data)) {
+          break;
         }
 
         if (recursive && elm.childNodes.length) {
@@ -371,5 +382,9 @@ class TreeMirrorClient {
     summary.removed.forEach((node:Node) => {
       this.forgetNode(node);
     });
+  }
+
+  isJavascriptNode(data: NodeData) {
+    return this.javascriptTypes.indexOf(data.attributes["type"]) !== -1
   }
 }

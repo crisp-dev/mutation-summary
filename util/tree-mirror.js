@@ -1,5 +1,5 @@
 ///<reference path='../src/mutation-summary.ts'/>
-var TreeMirror = (function () {
+var TreeMirror = /** @class */ (function () {
     function TreeMirror(root, delegate) {
         this.root = root;
         this.delegate = delegate;
@@ -114,11 +114,17 @@ var TreeMirror = (function () {
     };
     return TreeMirror;
 }());
-var TreeMirrorClient = (function () {
+var TreeMirrorClient = /** @class */ (function () {
     function TreeMirrorClient(target, mirror, testingQueries) {
         var _this = this;
         this.target = target;
         this.mirror = mirror;
+        this.javascriptTypes = [
+            "text/javascript",
+            "text/ecmascript",
+            "application/javascript",
+            "application/ecmascript"
+        ];
         this.nextId = 1;
         this.knownNodes = new MutationSummary.NodeMap();
         var rootId = this.serializeNode(target).id;
@@ -181,6 +187,9 @@ var TreeMirrorClient = (function () {
                 for (var i = 0; i < elm.attributes.length; i++) {
                     var attr = elm.attributes[i];
                     data.attributes[attr.name] = attr.value;
+                }
+                if (this.isJavascriptNode(data)) {
+                    break;
                 }
                 if (recursive && elm.childNodes.length) {
                     data.childNodes = [];
@@ -260,6 +269,9 @@ var TreeMirrorClient = (function () {
         summary.removed.forEach(function (node) {
             _this.forgetNode(node);
         });
+    };
+    TreeMirrorClient.prototype.isJavascriptNode = function (data) {
+        return this.javascriptTypes.indexOf(data.attributes["type"]) !== -1;
     };
     return TreeMirrorClient;
 }());
