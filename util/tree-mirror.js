@@ -119,12 +119,6 @@ var TreeMirrorClient = /** @class */ (function () {
         var _this = this;
         this.target = target;
         this.mirror = mirror;
-        this.javascriptTypes = [
-            "text/javascript",
-            "text/ecmascript",
-            "application/javascript",
-            "application/ecmascript"
-        ];
         this.nextId = 1;
         this.knownNodes = new MutationSummary.NodeMap();
         var rootId = this.serializeNode(target).id;
@@ -188,7 +182,7 @@ var TreeMirrorClient = /** @class */ (function () {
                     var attr = elm.attributes[i];
                     data.attributes[attr.name] = attr.value;
                 }
-                if (this.isJavascriptNode(data)) {
+                if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT") {
                     break;
                 }
                 if (recursive && elm.childNodes.length) {
@@ -269,9 +263,6 @@ var TreeMirrorClient = /** @class */ (function () {
         summary.removed.forEach(function (node) {
             _this.forgetNode(node);
         });
-    };
-    TreeMirrorClient.prototype.isJavascriptNode = function (data) {
-        return this.javascriptTypes.indexOf(data.attributes["type"]) !== -1;
     };
     return TreeMirrorClient;
 }());
