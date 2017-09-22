@@ -152,9 +152,8 @@ class TreeMirror {
             if (!this.delegate ||
               !this.delegate.setAttribute ||
               !this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
-              return;
+              (<Element>node).setAttribute(name, nodeData.attributes[name]);
             }
-            (<Element>node).setAttribute(name, nodeData.attributes[name]);
           } catch(e) {
 
           }

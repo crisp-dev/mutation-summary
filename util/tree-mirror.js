@@ -92,9 +92,8 @@ var TreeMirror = /** @class */ (function () {
                         if (!_this.delegate ||
                             !_this.delegate.setAttribute ||
                             !_this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
-                            return;
+                            node.setAttribute(name, nodeData.attributes[name]);
                         }
-                        node.setAttribute(name, nodeData.attributes[name]);
                     }
                     catch (e) {
                     }
