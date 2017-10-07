@@ -570,6 +570,20 @@ var TreeMirror = /** @class */ (function () {
             delete _this.idMap[node.id];
         });
     };
+    TreeMirror.prototype.decompressNode = function (node, compressed) {
+        if (!compressed) {
+            return node;
+        }
+        if (node.textContent) {
+            node.textContent = LZString.decompress(node.textContent);
+        }
+        if (node.attributes) {
+            Object.keys(node.attributes).forEach(function (attributeName) {
+                node.attributes[attributeName] = LZString.decompress(node.attributes[attributeName]);
+            });
+        }
+        return node;
+    };
     TreeMirror.prototype.deserializeNode = function (nodeData, parent) {
         var _this = this;
         if (nodeData === null)
@@ -617,7 +631,7 @@ var TreeMirror = /** @class */ (function () {
             for (var i = 0; i < nodeData.childNodes.length; i++)
                 this.deserializeNode(nodeData.childNodes[i], node);
         }
-        return node;
+        return this.decompressNode(node, nodeData.compressed);
     };
     return TreeMirror;
 }());
@@ -754,9 +768,16 @@ var TreeMirrorClient = /** @class */ (function () {
         });
     };
     TreeMirrorClient.prototype.compressNode = function (node) {
-        if (node["textContent"]) {
-            node["textContent"] = LZString.compress(node["textContent"]);
+        if (node.textContent || node.attributes) {
             node.compressed = true;
+        }
+        if (node.textContent) {
+            node.textContent = LZString.compress(node.textContent);
+        }
+        if (node.attributes) {
+            Object.keys(node.attributes).forEach(function (attributeName) {
+                node.attributes[attributeName] = LZString.compress(node.attributes[attributeName]);
+            });
         }
         return node;
     };

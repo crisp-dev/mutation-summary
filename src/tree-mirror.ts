@@ -118,6 +118,25 @@ class TreeMirror {
     });
   }
 
+  private decompressNode(node: Node, compressed: boolean): Node {
+    if (!compressed) {
+      return node;
+    }
+
+    if (node.textContent) {
+       node.textContent = LZString.decompress(node.textContent);
+    }
+
+    if (node.attributes) {
+      Object.keys(node.attributes).forEach((attributeName : string) => {
+        node.attributes[attributeName] = LZString.decompress(node.attributes[attributeName]);
+      });
+    }
+
+    return node;
+  }
+
+
   private deserializeNode(nodeData:NodeData, parent?:Element):Node {
     if (nodeData === null)
       return null;
@@ -177,7 +196,7 @@ class TreeMirror {
         this.deserializeNode(nodeData.childNodes[i], <Element>node);
     }
 
-    return node;
+    return this.decompressNode(node, nodeData.compressed);
   }
 }
 
@@ -350,9 +369,18 @@ class TreeMirrorClient {
   }
 
   private compressNode(node: NodeData): NodeData {
-    if (node["textContent"]) {
-       node["textContent"] = LZString.compress(node["textContent"]);
-       node.compressed = true;
+    if (node.textContent || node.attributes) {
+      node.compressed = true;
+    }
+
+    if (node.textContent) {
+       node.textContent = LZString.compress(node.textContent);
+    }
+
+    if (node.attributes) {
+      Object.keys(node.attributes).forEach((attributeName : string) => {
+        node.attributes[attributeName] = LZString.compress(node.attributes[attributeName]);
+      });
     }
 
     return node;
