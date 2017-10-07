@@ -1,6 +1,6 @@
 {
   "name": "mutation-summary",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Makes observing the DOM fast and easy",
   "main": "src/mutation-summary.js",
   "directories": {
@@ -18,13 +18,13 @@
   "license": "Apache 2.0",
   "devDependencies": {
     "chai": "*",
-    "mocha": "*"
+    "mocha": "*",
+    "typescript": "2.5.3",
+    "del": "2.2.1",
+    "gulp": "3.9.1",
+    "gulp-typescript": "3.2.2",
+    "gulp-concat": "2.6.0",
+    "gulp-bower": "0.0.13",
+    "gulp-notify": "2.2.0"
   }
 }
-
-
-
-
-
-
-

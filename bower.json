@@ -1,0 +1,11 @@
+{
+  "name" : "mutation-summary",
+
+  "dependencies" : {
+    "lz-string": "https://raw.githubusercontent.com/pieroxy/lz-string/91158b86fedb2934ba94bb2c9f238f6b2f62530b/libs/lz-string.js"
+  },
+
+  "install" : {
+    "path" : "lib/"
+  }
+}

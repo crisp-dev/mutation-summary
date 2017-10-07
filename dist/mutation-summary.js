@@ -11,12 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var MutationObserverCtor;
 if (typeof WebKitMutationObserver !== 'undefined')
     MutationObserverCtor = WebKitMutationObserver;
@@ -27,7 +31,7 @@ if (MutationObserverCtor === undefined) {
     console.error('https://developer.mozilla.org/en-US/docs/DOM/MutationObserver');
     throw Error('DOM Mutation Observers are required');
 }
-var NodeMap = (function () {
+var NodeMap = /** @class */ (function () {
     function NodeMap() {
         this.nodes = [];
         this.values = [];
@@ -53,7 +57,7 @@ var NodeMap = (function () {
     NodeMap.prototype.has = function (node) {
         return this.nodeId(node) in this.nodes;
     };
-    NodeMap.prototype.delete = function (node) {
+    NodeMap.prototype["delete"] = function (node) {
         var id = this.nodeId(node);
         delete this.nodes[id];
         this.values[id] = undefined;
@@ -70,7 +74,7 @@ var NodeMap = (function () {
     NodeMap.ID_PROP = '__mutation_summary_node_map_id__';
     NodeMap.nextId_ = 1;
     return NodeMap;
-})();
+}());
 /**
  *  var reachableMatchableProduct = [
  *  //  STAYED_OUT,  ENTERED,     STAYED_IN,   EXITED
@@ -92,7 +96,7 @@ var Movement;
 function enteredOrExited(changeType) {
     return changeType === Movement.ENTERED || changeType === Movement.EXITED;
 }
-var NodeChange = (function () {
+var NodeChange = /** @class */ (function () {
     function NodeChange(node, childList, attributes, characterData, oldParentNode, added, attributeOldValues, characterDataOldValue) {
         if (childList === void 0) { childList = false; }
         if (attributes === void 0) { attributes = false; }
@@ -173,8 +177,8 @@ var NodeChange = (function () {
         return this.node.parentNode;
     };
     return NodeChange;
-})();
-var ChildListChange = (function () {
+}());
+var ChildListChange = /** @class */ (function () {
     function ChildListChange() {
         this.added = new NodeMap();
         this.removed = new NodeMap();
@@ -183,43 +187,44 @@ var ChildListChange = (function () {
         this.moved = undefined;
     }
     return ChildListChange;
-})();
-var TreeChanges = (function (_super) {
+}());
+var TreeChanges = /** @class */ (function (_super) {
     __extends(TreeChanges, _super);
     function TreeChanges(rootNode, mutations) {
-        _super.call(this);
-        this.rootNode = rootNode;
-        this.reachableCache = undefined;
-        this.wasReachableCache = undefined;
-        this.anyParentsChanged = false;
-        this.anyAttributesChanged = false;
-        this.anyCharacterDataChanged = false;
+        var _this = _super.call(this) || this;
+        _this.rootNode = rootNode;
+        _this.reachableCache = undefined;
+        _this.wasReachableCache = undefined;
+        _this.anyParentsChanged = false;
+        _this.anyAttributesChanged = false;
+        _this.anyCharacterDataChanged = false;
         for (var m = 0; m < mutations.length; m++) {
             var mutation = mutations[m];
             switch (mutation.type) {
                 case 'childList':
-                    this.anyParentsChanged = true;
+                    _this.anyParentsChanged = true;
                     for (var i = 0; i < mutation.removedNodes.length; i++) {
                         var node = mutation.removedNodes[i];
-                        this.getChange(node).removedFromParent(mutation.target);
+                        _this.getChange(node).removedFromParent(mutation.target);
                     }
                     for (var i = 0; i < mutation.addedNodes.length; i++) {
                         var node = mutation.addedNodes[i];
-                        this.getChange(node).insertedIntoParent();
+                        _this.getChange(node).insertedIntoParent();
                     }
                     break;
                 case 'attributes':
-                    this.anyAttributesChanged = true;
-                    var change = this.getChange(mutation.target);
+                    _this.anyAttributesChanged = true;
+                    var change = _this.getChange(mutation.target);
                     change.attributeMutated(mutation.attributeName, mutation.oldValue);
                     break;
                 case 'characterData':
-                    this.anyCharacterDataChanged = true;
-                    var change = this.getChange(mutation.target);
+                    _this.anyCharacterDataChanged = true;
+                    var change = _this.getChange(mutation.target);
                     change.characterDataMutated(mutation.oldValue);
                     break;
             }
         }
+        return _this;
     }
     TreeChanges.prototype.getChange = function (node) {
         var change = this.get(node);
@@ -269,8 +274,8 @@ var TreeChanges = (function (_super) {
             Movement.EXITED : Movement.STAYED_OUT;
     };
     return TreeChanges;
-})(NodeMap);
-var MutationProjection = (function () {
+}(NodeMap));
+var MutationProjection = /** @class */ (function () {
     // TOOD(any)
     function MutationProjection(rootNode, mutations, selectors, calcReordered, calcOldPreviousSibling) {
         this.rootNode = rootNode;
@@ -582,11 +587,11 @@ var MutationProjection = (function () {
                 var node = mutation.removedNodes[j];
                 recordOldPrevious(node, oldPrevious);
                 if (change.added.has(node)) {
-                    change.added.delete(node);
+                    change.added["delete"](node);
                 }
                 else {
                     change.removed.set(node, true);
-                    change.maybeMoved.delete(node);
+                    change.maybeMoved["delete"](node);
                 }
                 oldPrevious = node;
             }
@@ -594,7 +599,7 @@ var MutationProjection = (function () {
             for (var j = 0; j < mutation.addedNodes.length; j++) {
                 var node = mutation.addedNodes[j];
                 if (change.removed.has(node)) {
-                    change.removed.delete(node);
+                    change.removed["delete"](node);
                     change.maybeMoved.set(node, true);
                 }
                 else {
@@ -634,7 +639,7 @@ var MutationProjection = (function () {
                 didMove = getPrevious(node) !== getOldPrevious(node);
             }
             if (pendingMoveDecision.has(node)) {
-                pendingMoveDecision.delete(node);
+                pendingMoveDecision["delete"](node);
                 change.moved.set(node, didMove);
             }
             else {
@@ -671,8 +676,8 @@ var MutationProjection = (function () {
         return change.moved.get(node);
     };
     return MutationProjection;
-})();
-var Summary = (function () {
+}());
+var Summary = /** @class */ (function () {
     function Summary(projection, query) {
         var _this = this;
         this.projection = projection;
@@ -720,7 +725,7 @@ var Summary = (function () {
         return this.projection.getOldPreviousSibling(node);
     };
     return Summary;
-})();
+}());
 // TODO(rafaelw): Allow ':' and '.' as valid name characters.
 var validNameInitialChar = /[a-zA-Z_]+/;
 var validNameNonInitialChar = /[a-zA-Z0-9_\-]+/;
@@ -730,7 +735,7 @@ var validNameNonInitialChar = /[a-zA-Z0-9_\-]+/;
 function escapeQuotes(value) {
     return '"' + value.replace(/"/, '\\\"') + '"';
 }
-var Qualifier = (function () {
+var Qualifier = /** @class */ (function () {
     function Qualifier() {
     }
     Qualifier.prototype.matches = function (oldValue) {
@@ -759,8 +764,8 @@ var Qualifier = (function () {
         return '[' + this.attrName + ']';
     };
     return Qualifier;
-})();
-var Selector = (function () {
+}());
+var Selector = /** @class */ (function () {
     function Selector() {
         this.uid = Selector.nextUid++;
         this.qualifiers = [];
@@ -1133,7 +1138,7 @@ var Selector = (function () {
         return 'matchesSelector';
     })();
     return Selector;
-})();
+}());
 var attributeFilterPattern = /^([a-zA-Z:_]+[a-zA-Z0-9_\-:\.]*)$/;
 function validateAttribute(attribute) {
     if (typeof attribute != 'string')
@@ -1173,7 +1178,7 @@ function elementFilterAttributes(selectors) {
     });
     return Object.keys(attributes);
 }
-var MutationSummary = (function () {
+var MutationSummary = /** @class */ (function () {
     function MutationSummary(opts) {
         var _this = this;
         this.connected = false;
@@ -1393,4 +1398,4 @@ var MutationSummary = (function () {
         'observeOwnChanges': true
     };
     return MutationSummary;
-})();
+}());

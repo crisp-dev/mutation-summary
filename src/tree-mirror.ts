@@ -1,4 +1,5 @@
-///<reference path='../src/mutation-summary.ts'/>
+///<reference path='./mutation-summary.ts'/>
+///<reference path='../lib/lz-string/index.js'/>
 
 // Copyright 2013 Google Inc.
 //
@@ -24,6 +25,7 @@ interface NodeData {
   tagName?:string;
   attributes?:StringMap<string>;
   childNodes?:NodeData[];
+  compressed:boolean
 }
 
 interface PositionData extends NodeData {
@@ -278,7 +280,7 @@ class TreeMirrorClient {
         break;
     }
 
-    return data;
+    return this.compressNode(data);
   }
 
   private serializeAddedAndMoved(added:Node[],
@@ -345,6 +347,15 @@ class TreeMirrorClient {
     return map.keys().map((node:Node) => {
       return map.get(node);
     });
+  }
+
+  private compressNode(node: NodeData): NodeData {
+    if (node["textContent"]) {
+       node["textContent"] = LZString.compress(node["textContent"]);
+       node.compressed = true;
+    }
+
+    return node;
   }
 
   applyChanged(summaries:Summary[]) {
