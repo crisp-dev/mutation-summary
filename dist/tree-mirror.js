@@ -570,8 +570,8 @@ var TreeMirror = /** @class */ (function () {
             delete _this.idMap[node.id];
         });
     };
-    TreeMirror.prototype.decompressNode = function (node, compressed) {
-        if (!compressed) {
+    TreeMirror.prototype.decompressNode = function (node) {
+        if (!node.compressed) {
             return node;
         }
         if (node.textContent) {
@@ -591,6 +591,7 @@ var TreeMirror = /** @class */ (function () {
         var node = this.idMap[nodeData.id];
         if (node)
             return node;
+        nodeData = this.decompressNode(nodeData);
         var doc = this.root.ownerDocument;
         if (doc === null)
             doc = this.root;
@@ -631,7 +632,7 @@ var TreeMirror = /** @class */ (function () {
             for (var i = 0; i < nodeData.childNodes.length; i++)
                 this.deserializeNode(nodeData.childNodes[i], node);
         }
-        return this.decompressNode(node, nodeData.compressed);
+        return node;
     };
     return TreeMirror;
 }());

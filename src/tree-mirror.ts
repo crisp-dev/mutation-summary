@@ -118,8 +118,8 @@ class TreeMirror {
     });
   }
 
-  private decompressNode(node: Node, compressed: boolean): Node {
-    if (!compressed) {
+  private decompressNode(node: NodeData): NodeData {
+    if (!node.compressed) {
       return node;
     }
 
@@ -144,6 +144,8 @@ class TreeMirror {
     var node:Node = this.idMap[nodeData.id];
     if (node)
       return node;
+
+    nodeData = this.decompressNode(nodeData);
 
     var doc = this.root.ownerDocument;
     if (doc === null)
@@ -196,7 +198,7 @@ class TreeMirror {
         this.deserializeNode(nodeData.childNodes[i], <Element>node);
     }
 
-    return this.decompressNode(node, nodeData.compressed);
+    return node;
   }
 }
 
