@@ -3,3 +3,6 @@
 *.js.map
 node_modules
 .project
+lib
+tmp
+bower_components
