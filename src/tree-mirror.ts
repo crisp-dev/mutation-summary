@@ -16,16 +16,16 @@
 // limitations under the License.
 
 interface NodeData {
-  id:number;
-  nodeType?:number;
-  name?:string;
-  publicId?:string;
-  systemId?:string;
-  textContent?:string;
-  tagName?:string;
-  attributes?:StringMap<string>;
-  childNodes?:NodeData[];
-  compressed:boolean
+  i:number; //id
+  nT?:number; //nodeType
+  n?:string; //name
+  p?:string; //publicId
+  s?:string; //systemId
+  tC?:string; //textContent
+  tN?:string; //tagName
+  a?:StringMap<string>; //attributes
+  cN?:NodeData[]; //childNodes
+  c:number //compressed
 }
 
 interface PositionData extends NodeData {
@@ -119,17 +119,17 @@ class TreeMirror {
   }
 
   private decompressNode(node: NodeData): NodeData {
-    if (!node.compressed) {
+    if (!node.c) {
       return node;
     }
 
-    if (node.textContent) {
-       node.textContent = LZString.decompress(node.textContent);
+    if (node.tC) {
+       node.tC = LZString.decompressFromUTF16(node.tC);
     }
 
-    if (node.attributes) {
-      Object.keys(node.attributes).forEach((attributeName : string) => {
-        node.attributes[attributeName] = LZString.decompress(node.attributes[attributeName]);
+    if (node.a) {
+      Object.keys(node.a).forEach((attributeName : string) => {
+        node.a[attributeName] = LZString.decompressFromUTF16(node.a[attributeName]);
       });
     }
 
@@ -141,7 +141,7 @@ class TreeMirror {
     if (nodeData === null)
       return null;
 
-    var node:Node = this.idMap[nodeData.id];
+    var node:Node = this.idMap[nodeData.i];
     if (node)
       return node;
 
@@ -151,31 +151,31 @@ class TreeMirror {
     if (doc === null)
       doc = <HTMLDocument>this.root;
 
-    switch(nodeData.nodeType) {
+    switch(nodeData.nT) {
       case Node.COMMENT_NODE:
-        node = doc.createComment(nodeData.textContent);
+        node = doc.createComment(nodeData.tC);
         break;
 
       case Node.TEXT_NODE:
-        node = doc.createTextNode(nodeData.textContent);
+        node = doc.createTextNode(nodeData.tC);
         break;
 
       case Node.DOCUMENT_TYPE_NODE:
-        node = doc.implementation.createDocumentType(nodeData.name, nodeData.publicId, nodeData.systemId);
+        node = doc.implementation.createDocumentType(nodeData.n, nodeData.p, nodeData.s);
         break;
 
       case Node.ELEMENT_NODE:
         if (this.delegate && this.delegate.createElement)
-          node = this.delegate.createElement(nodeData.tagName);
+          node = this.delegate.createElement(nodeData.tN);
         if (!node)
-          node = doc.createElement(nodeData.tagName);
+          node = doc.createElement(nodeData.tN);
 
-        Object.keys(nodeData.attributes).forEach((name) => {
+        Object.keys(nodeData.a).forEach((name) => {
           try {
             if (!this.delegate ||
               !this.delegate.setAttribute ||
-              !this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
-              (<Element>node).setAttribute(name, nodeData.attributes[name]);
+              !this.delegate.setAttribute(node, name, nodeData.a[name])) {
+              (<Element>node).setAttribute(name, nodeData.a[name]);
             }
           } catch(e) {
 
@@ -188,14 +188,14 @@ class TreeMirror {
     if (!node)
       throw "ouch";
 
-    this.idMap[nodeData.id] = node;
+    this.idMap[nodeData.i] = node;
 
     if (parent)
       parent.appendChild(node);
 
-    if (nodeData.childNodes) {
-      for (var i = 0; i < nodeData.childNodes.length; i++)
-        this.deserializeNode(nodeData.childNodes[i], <Element>node);
+    if (nodeData.cN) {
+      for (var i = 0; i < nodeData.cN.length; i++)
+        this.deserializeNode(nodeData.cN[i], <Element>node);
     }
 
     return node;
@@ -259,44 +259,46 @@ class TreeMirrorClient {
 
     var id = this.knownNodes.get(node);
     if (id !== undefined) {
-      return { id: id };
+      return {
+        i: id
+      };
     }
 
     var data:NodeData = {
-      nodeType: node.nodeType,
-      id: this.rememberNode(node)
+      nT: node.nodeType,
+      i: this.rememberNode(node)
     };
 
-    switch(data.nodeType) {
+    switch(data.nT) {
       case Node.DOCUMENT_TYPE_NODE:
         var docType = <DocumentType>node;
-        data.name = docType.name;
-        data.publicId = docType.publicId;
-        data.systemId = docType.systemId;
+        data.n = docType.name;
+        data.p = docType.publicId;
+        data.s = docType.systemId;
         break;
 
       case Node.COMMENT_NODE:
       case Node.TEXT_NODE:
-        data.textContent = node.textContent;
+        data.tC = node.textContent;
         break;
 
       case Node.ELEMENT_NODE:
         var elm = <Element>node;
-        data.tagName = elm.tagName;
-        data.attributes = {};
+        data.tN = elm.tagName;
+        data.a = {};
 
         for (var i = 0; i < elm.attributes.length; i++) {
           var attr = elm.attributes[i];
-          data.attributes[attr.name] = attr.value;
+          data.a[attr.name] = attr.value;
         }
         if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT") {
           break;
         }
         if (recursive && elm.childNodes.length) {
-          data.childNodes = [];
+          data.cN = [];
 
           for (var child = elm.firstChild; child; child = child.nextSibling)
-            data.childNodes.push(this.serializeNode(child, true));
+            data.cN.push(this.serializeNode(child, true));
         }
         break;
     }
@@ -371,17 +373,17 @@ class TreeMirrorClient {
   }
 
   private compressNode(node: NodeData): NodeData {
-    if (node.textContent || node.attributes) {
-      node.compressed = true;
+    if (node.tC || node.a) {
+      node.c = 1;
     }
 
-    if (node.textContent) {
-       node.textContent = LZString.compress(node.textContent);
+    if (node.tC) {
+       node.tC = LZString.compressToUTF16(node.tC);
     }
 
-    if (node.attributes) {
-      Object.keys(node.attributes).forEach((attributeName : string) => {
-        node.attributes[attributeName] = LZString.compress(node.attributes[attributeName]);
+    if (node.a) {
+      Object.keys(node.a).forEach((attributeName : string) => {
+        node.a[attributeName] = LZString.compressToUTF16(node.a[attributeName]);
       });
     }
 
@@ -405,7 +407,7 @@ class TreeMirrorClient {
 
     var text:TextData[] = summary.characterDataChanged.map((node:Node) => {
       var data = this.serializeNode(node);
-      data.textContent = node.textContent;
+      data.tC = node.textContent;
       return <TextData>data;
     });
 

@@ -571,15 +571,15 @@ var TreeMirror = /** @class */ (function () {
         });
     };
     TreeMirror.prototype.decompressNode = function (node) {
-        if (!node.compressed) {
+        if (!node.c) {
             return node;
         }
-        if (node.textContent) {
-            node.textContent = LZString.decompress(node.textContent);
+        if (node.tC) {
+            node.tC = LZString.decompressFromUTF16(node.tC);
         }
-        if (node.attributes) {
-            Object.keys(node.attributes).forEach(function (attributeName) {
-                node.attributes[attributeName] = LZString.decompress(node.attributes[attributeName]);
+        if (node.a) {
+            Object.keys(node.a).forEach(function (attributeName) {
+                node.a[attributeName] = LZString.decompressFromUTF16(node.a[attributeName]);
             });
         }
         return node;
@@ -588,34 +588,34 @@ var TreeMirror = /** @class */ (function () {
         var _this = this;
         if (nodeData === null)
             return null;
-        var node = this.idMap[nodeData.id];
+        var node = this.idMap[nodeData.i];
         if (node)
             return node;
         nodeData = this.decompressNode(nodeData);
         var doc = this.root.ownerDocument;
         if (doc === null)
             doc = this.root;
-        switch (nodeData.nodeType) {
+        switch (nodeData.nT) {
             case Node.COMMENT_NODE:
-                node = doc.createComment(nodeData.textContent);
+                node = doc.createComment(nodeData.tC);
                 break;
             case Node.TEXT_NODE:
-                node = doc.createTextNode(nodeData.textContent);
+                node = doc.createTextNode(nodeData.tC);
                 break;
             case Node.DOCUMENT_TYPE_NODE:
-                node = doc.implementation.createDocumentType(nodeData.name, nodeData.publicId, nodeData.systemId);
+                node = doc.implementation.createDocumentType(nodeData.n, nodeData.p, nodeData.s);
                 break;
             case Node.ELEMENT_NODE:
                 if (this.delegate && this.delegate.createElement)
-                    node = this.delegate.createElement(nodeData.tagName);
+                    node = this.delegate.createElement(nodeData.tN);
                 if (!node)
-                    node = doc.createElement(nodeData.tagName);
-                Object.keys(nodeData.attributes).forEach(function (name) {
+                    node = doc.createElement(nodeData.tN);
+                Object.keys(nodeData.a).forEach(function (name) {
                     try {
                         if (!_this.delegate ||
                             !_this.delegate.setAttribute ||
-                            !_this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
-                            node.setAttribute(name, nodeData.attributes[name]);
+                            !_this.delegate.setAttribute(node, name, nodeData.a[name])) {
+                            node.setAttribute(name, nodeData.a[name]);
                         }
                     }
                     catch (e) {
@@ -625,12 +625,12 @@ var TreeMirror = /** @class */ (function () {
         }
         if (!node)
             throw "ouch";
-        this.idMap[nodeData.id] = node;
+        this.idMap[nodeData.i] = node;
         if (parent)
             parent.appendChild(node);
-        if (nodeData.childNodes) {
-            for (var i = 0; i < nodeData.childNodes.length; i++)
-                this.deserializeNode(nodeData.childNodes[i], node);
+        if (nodeData.cN) {
+            for (var i = 0; i < nodeData.cN.length; i++)
+                this.deserializeNode(nodeData.cN[i], node);
         }
         return node;
     };
@@ -679,38 +679,40 @@ var TreeMirrorClient = /** @class */ (function () {
             return null;
         var id = this.knownNodes.get(node);
         if (id !== undefined) {
-            return { id: id };
+            return {
+                i: id
+            };
         }
         var data = {
-            nodeType: node.nodeType,
-            id: this.rememberNode(node)
+            nT: node.nodeType,
+            i: this.rememberNode(node)
         };
-        switch (data.nodeType) {
+        switch (data.nT) {
             case Node.DOCUMENT_TYPE_NODE:
                 var docType = node;
-                data.name = docType.name;
-                data.publicId = docType.publicId;
-                data.systemId = docType.systemId;
+                data.n = docType.name;
+                data.p = docType.publicId;
+                data.s = docType.systemId;
                 break;
             case Node.COMMENT_NODE:
             case Node.TEXT_NODE:
-                data.textContent = node.textContent;
+                data.tC = node.textContent;
                 break;
             case Node.ELEMENT_NODE:
                 var elm = node;
-                data.tagName = elm.tagName;
-                data.attributes = {};
+                data.tN = elm.tagName;
+                data.a = {};
                 for (var i = 0; i < elm.attributes.length; i++) {
                     var attr = elm.attributes[i];
-                    data.attributes[attr.name] = attr.value;
+                    data.a[attr.name] = attr.value;
                 }
                 if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT") {
                     break;
                 }
                 if (recursive && elm.childNodes.length) {
-                    data.childNodes = [];
+                    data.cN = [];
                     for (var child = elm.firstChild; child; child = child.nextSibling)
-                        data.childNodes.push(this.serializeNode(child, true));
+                        data.cN.push(this.serializeNode(child, true));
                 }
                 break;
         }
@@ -769,15 +771,15 @@ var TreeMirrorClient = /** @class */ (function () {
         });
     };
     TreeMirrorClient.prototype.compressNode = function (node) {
-        if (node.textContent || node.attributes) {
-            node.compressed = true;
+        if (node.tC || node.a) {
+            node.c = true;
         }
-        if (node.textContent) {
-            node.textContent = LZString.compress(node.textContent);
+        if (node.tC) {
+            node.tC = LZString.compressToUTF16(node.tC);
         }
-        if (node.attributes) {
-            Object.keys(node.attributes).forEach(function (attributeName) {
-                node.attributes[attributeName] = LZString.compress(node.attributes[attributeName]);
+        if (node.a) {
+            Object.keys(node.a).forEach(function (attributeName) {
+                node.a[attributeName] = LZString.compressToUTF16(node.a[attributeName]);
             });
         }
         return node;
@@ -792,7 +794,7 @@ var TreeMirrorClient = /** @class */ (function () {
         var attributes = this.serializeAttributeChanges(summary.attributeChanged);
         var text = summary.characterDataChanged.map(function (node) {
             var data = _this.serializeNode(node);
-            data.textContent = node.textContent;
+            data.tC = node.textContent;
             return data;
         });
         this.mirror.applyChanged(removed, moved, attributes, text);
