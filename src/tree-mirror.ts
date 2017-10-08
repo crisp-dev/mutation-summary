@@ -90,7 +90,7 @@ class TreeMirror {
     attributes.forEach((data:AttributeData) => {
       var node = <Element> this.deserializeNode(data);
       Object.keys(data.attributes).forEach((attrName) => {
-        var newVal = data.attributes[attrName];
+        var newVal = LZString.decompressFromUTF16(data.attributes[attrName]);
 
         try {
           if (newVal === null) {
@@ -363,7 +363,7 @@ class TreeMirrorClient {
           map.set(element, record);
         }
 
-        record.attributes[attrName] = element.getAttribute(attrName);
+        record.attributes[attrName] = LZString.compressToUTF16(element.getAttribute(attrName));
       });
     });
 

@@ -545,7 +545,7 @@ var TreeMirror = /** @class */ (function () {
         attributes.forEach(function (data) {
             var node = _this.deserializeNode(data);
             Object.keys(data.attributes).forEach(function (attrName) {
-                var newVal = data.attributes[attrName];
+                var newVal = LZString.decompressFromUTF16(data.attributes[attrName]);
                 try {
                     if (newVal === null) {
                         node.removeAttribute(attrName);
@@ -763,7 +763,7 @@ var TreeMirrorClient = /** @class */ (function () {
                     record.attributes = {};
                     map.set(element, record);
                 }
-                record.attributes[attrName] = element.getAttribute(attrName);
+                record.attributes[attrName] = LZString.compressToUTF16(element.getAttribute(attrName));
             });
         });
         return map.keys().map(function (node) {
@@ -772,7 +772,7 @@ var TreeMirrorClient = /** @class */ (function () {
     };
     TreeMirrorClient.prototype.compressNode = function (node) {
         if (node.tC || node.a) {
-            node.c = true;
+            node.c = 1;
         }
         if (node.tC) {
             node.tC = LZString.compressToUTF16(node.tC);
