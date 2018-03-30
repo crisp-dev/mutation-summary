@@ -214,8 +214,13 @@ class TreeMirrorClient {
 
     var rootId = this.serializeNode(target).id;
     var children:NodeData[] = [];
-    for (var child = target.firstChild; child; child = child.nextSibling)
-      children.push(this.serializeNode(child, true));
+    for (var child = target.firstChild; child; child = child.nextSibling) {
+      var _node = this.serializeNode(child, true);
+
+      if (_node != null) {
+        children.push(_node);
+      }
+    }
 
     this.mirror.initialize(rootId, children);
 
@@ -278,6 +283,7 @@ class TreeMirrorClient {
         break;
 
       case Node.COMMENT_NODE:
+        return null;
       case Node.TEXT_NODE:
         data.tC = node.textContent;
         break;
@@ -291,14 +297,20 @@ class TreeMirrorClient {
           var attr = elm.attributes[i];
           data.a[attr.name] = attr.value;
         }
-        if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT") {
-          break;
+        if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT"
+          || elm.tagName == "CANVAS" || elm.tagName == "IFRAME") {
+          return null;
         }
         if (recursive && elm.childNodes.length) {
           data.cN = [];
 
-          for (var child = elm.firstChild; child; child = child.nextSibling)
-            data.cN.push(this.serializeNode(child, true));
+          for (var child = elm.firstChild; child; child = child.nextSibling) {
+            var _node = this.serializeNode(child, true);
+
+            if (_node != null) {
+              data.cN.push(this.serializeNode(child, true));
+            }
+          }
         }
         break;
     }
@@ -337,10 +349,13 @@ class TreeMirrorClient {
 
         while (node && children.has(node)) {
           var data = <PositionData>this.serializeNode(node);
-          data.previousSibling = this.serializeNode(node.previousSibling);
-          data.parentNode = this.serializeNode(node.parentNode);
-          moved.push(<PositionData>data);
-          children.delete(node);
+
+          if (data != null) {
+            data.previousSibling = this.serializeNode(node.previousSibling);
+            data.parentNode = this.serializeNode(node.parentNode);
+            moved.push(<PositionData>data);
+            children.delete(node);
+          }
           node = node.nextSibling;
         }
 
@@ -359,11 +374,16 @@ class TreeMirrorClient {
         var record = map.get(element);
         if (!record) {
           record = <AttributeData>this.serializeNode(element);
-          record.attributes = {};
-          map.set(element, record);
+
+          if (record != null) {
+            record.attributes = {};
+            map.set(element, record);
+          }
         }
 
-        record.attributes[attrName] = LZString.compressToUTF16(element.getAttribute(attrName));
+        if (record != null) {
+          record.attributes[attrName] = LZString.compressToUTF16(element.getAttribute(attrName));
+        }
       });
     });
 
@@ -407,7 +427,9 @@ class TreeMirrorClient {
 
     var text:TextData[] = summary.characterDataChanged.map((node:Node) => {
       var data = this.serializeNode(node);
-      data.tC = node.textContent;
+      if (data != null) {
+        data.tC = node.textContent;
+      }
       return <TextData>data;
     });
 

@@ -645,8 +645,12 @@ var TreeMirrorClient = /** @class */ (function () {
         this.knownNodes = new MutationSummary.NodeMap();
         var rootId = this.serializeNode(target).id;
         var children = [];
-        for (var child = target.firstChild; child; child = child.nextSibling)
-            children.push(this.serializeNode(child, true));
+        for (var child = target.firstChild; child; child = child.nextSibling) {
+            var _node = this.serializeNode(child, true);
+            if (_node != null) {
+                children.push(_node);
+            }
+        }
         this.mirror.initialize(rootId, children);
         var self = this;
         var queries = [{ all: true }];
@@ -695,6 +699,7 @@ var TreeMirrorClient = /** @class */ (function () {
                 data.s = docType.systemId;
                 break;
             case Node.COMMENT_NODE:
+                return null;
             case Node.TEXT_NODE:
                 data.tC = node.textContent;
                 break;
@@ -706,13 +711,18 @@ var TreeMirrorClient = /** @class */ (function () {
                     var attr = elm.attributes[i];
                     data.a[attr.name] = attr.value;
                 }
-                if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT") {
-                    break;
+                if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT"
+                    || elm.tagName == "CANVAS" || elm.tagName == "IFRAME") {
+                    return null;
                 }
                 if (recursive && elm.childNodes.length) {
                     data.cN = [];
-                    for (var child = elm.firstChild; child; child = child.nextSibling)
-                        data.cN.push(this.serializeNode(child, true));
+                    for (var child = elm.firstChild; child; child = child.nextSibling) {
+                        var _node = this.serializeNode(child, true);
+                        if (_node != null) {
+                            data.cN.push(this.serializeNode(child, true));
+                        }
+                    }
                 }
                 break;
         }
@@ -741,10 +751,12 @@ var TreeMirrorClient = /** @class */ (function () {
                     node = node.previousSibling;
                 while (node && children.has(node)) {
                     var data = _this.serializeNode(node);
-                    data.previousSibling = _this.serializeNode(node.previousSibling);
-                    data.parentNode = _this.serializeNode(node.parentNode);
-                    moved.push(data);
-                    children["delete"](node);
+                    if (data != null) {
+                        data.previousSibling = _this.serializeNode(node.previousSibling);
+                        data.parentNode = _this.serializeNode(node.parentNode);
+                        moved.push(data);
+                        children["delete"](node);
+                    }
                     node = node.nextSibling;
                 }
                 var keys = children.keys();
@@ -760,10 +772,14 @@ var TreeMirrorClient = /** @class */ (function () {
                 var record = map.get(element);
                 if (!record) {
                     record = _this.serializeNode(element);
-                    record.attributes = {};
-                    map.set(element, record);
+                    if (record != null) {
+                        record.attributes = {};
+                        map.set(element, record);
+                    }
                 }
-                record.attributes[attrName] = LZString.compressToUTF16(element.getAttribute(attrName));
+                if (record != null) {
+                    record.attributes[attrName] = LZString.compressToUTF16(element.getAttribute(attrName));
+                }
             });
         });
         return map.keys().map(function (node) {
@@ -794,7 +810,9 @@ var TreeMirrorClient = /** @class */ (function () {
         var attributes = this.serializeAttributeChanges(summary.attributeChanged);
         var text = summary.characterDataChanged.map(function (node) {
             var data = _this.serializeNode(node);
-            data.tC = node.textContent;
+            if (data != null) {
+                data.tC = node.textContent;
+            }
             return data;
         });
         this.mirror.applyChanged(removed, moved, attributes, text);
