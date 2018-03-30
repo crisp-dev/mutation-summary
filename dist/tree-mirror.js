@@ -720,7 +720,7 @@ var TreeMirrorClient = /** @class */ (function () {
                     for (var child = elm.firstChild; child; child = child.nextSibling) {
                         var _node = this.serializeNode(child, true);
                         if (_node != null) {
-                            data.cN.push(this.serializeNode(child, true));
+                            data.cN.push(_node);
                         }
                     }
                 }

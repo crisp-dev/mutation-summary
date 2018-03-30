@@ -308,7 +308,7 @@ class TreeMirrorClient {
             var _node = this.serializeNode(child, true);
 
             if (_node != null) {
-              data.cN.push(this.serializeNode(child, true));
+              data.cN.push(_node);
             }
           }
         }
