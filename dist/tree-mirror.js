@@ -712,7 +712,7 @@ var TreeMirrorClient = /** @class */ (function () {
                     data.a[attr.name] = attr.value;
                 }
                 if (elm.tagName == "SCRIPT" || elm.tagName == "NOSCRIPT"
-                    || elm.tagName == "CANVAS" || elm.tagName == "IFRAME") {
+                    || elm.tagName == "CANVAS") {
                     return null;
                 }
                 if (recursive && elm.childNodes.length) {
