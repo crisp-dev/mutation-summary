@@ -67,50 +67,65 @@ class TreeMirror {
     // remove all changed nodes from their parents, then apply.
     addedOrMoved.forEach((data:PositionData) => {
       var node = this.deserializeNode(data);
-      var parent = this.deserializeNode(data.parentNode);
-      var previous = this.deserializeNode(data.previousSibling);
-      if (node.parentNode)
-        node.parentNode.removeChild(node);
+
+      if (node) {
+        var parent = this.deserializeNode(data.parentNode);
+        var previous = this.deserializeNode(data.previousSibling);
+        if (node.parentNode)
+          node.parentNode.removeChild(node);
+      }
     });
 
     removed.forEach((data:NodeData) => {
       var node = this.deserializeNode(data);
-      if (node.parentNode)
-        node.parentNode.removeChild(node);
+
+      if (node) {
+        if (node.parentNode)
+          node.parentNode.removeChild(node);
+      }
     });
 
     addedOrMoved.forEach((data:PositionData) => {
       var node = this.deserializeNode(data);
-      var parent = this.deserializeNode(data.parentNode);
-      var previous = this.deserializeNode(data.previousSibling);
-      parent.insertBefore(node,
-                          previous ? previous.nextSibling : parent.firstChild);
+
+      if (node) {
+        var parent = this.deserializeNode(data.parentNode);
+        var previous = this.deserializeNode(data.previousSibling);
+        parent.insertBefore(node,
+                            previous ? previous.nextSibling : parent.firstChild);
+      }
     });
 
     attributes.forEach((data:AttributeData) => {
       var node = <Element> this.deserializeNode(data);
-      Object.keys(data.attributes).forEach((attrName) => {
-        var newVal = LZString.decompressFromUTF16(data.attributes[attrName]);
 
-        try {
-          if (newVal === null) {
-            node.removeAttribute(attrName);
-          } else {
-            if (!this.delegate ||
-              !this.delegate.setAttribute ||
-              !this.delegate.setAttribute(node, attrName, newVal)) {
-              node.setAttribute(attrName, newVal);
+      if (node) {
+        Object.keys(data.attributes).forEach((attrName) => {
+          var newVal = LZString.decompressFromUTF16(data.attributes[attrName]);
+
+          try {
+            if (newVal === null) {
+              node.removeAttribute(attrName);
+            } else {
+              if (!this.delegate ||
+                !this.delegate.setAttribute ||
+                !this.delegate.setAttribute(node, attrName, newVal)) {
+                node.setAttribute(attrName, newVal);
+              }
             }
-          }
-        } catch(e) {
+          } catch(e) {
 
-        }
-      });
+          }
+        });
+      }
     });
 
     text.forEach((data:TextData) => {
       var node = this.deserializeNode(data);
-      node.textContent = data.textContent;
+
+      if (node) {
+        node.textContent = data.textContent;
+      }
     });
 
     removed.forEach((node:NodeData) => {
@@ -185,8 +200,9 @@ class TreeMirror {
         break;
     }
 
-    if (!node)
-      throw "ouch";
+    if (!node) {
+      return null;
+    }
 
     this.idMap[nodeData.i] = node;
 
