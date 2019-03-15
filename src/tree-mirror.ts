@@ -456,3 +456,5 @@ class TreeMirrorClient {
     });
   }
 }
+
+window.TreeMirror = TreeMirror;

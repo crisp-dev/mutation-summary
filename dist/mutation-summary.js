@@ -1399,3 +1399,4 @@ var MutationSummary = /** @class */ (function () {
     };
     return MutationSummary;
 }());
+window.MutationSummary = MutationSummary;
