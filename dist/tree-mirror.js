@@ -38,7 +38,9 @@ var TreeMirror = /** @class */ (function () {
             if (node) {
                 var parent = _this.deserializeNode(data.parentNode);
                 var previous = _this.deserializeNode(data.previousSibling);
-                parent.insertBefore(node, previous ? previous.nextSibling : parent.firstChild);
+                if (parent) {
+                    parent.insertBefore(node, previous ? previous.nextSibling : parent.firstChild);
+                }
             }
         });
         attributes.forEach(function (data) {

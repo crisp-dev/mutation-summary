@@ -91,8 +91,11 @@ class TreeMirror {
       if (node) {
         var parent = this.deserializeNode(data.parentNode);
         var previous = this.deserializeNode(data.previousSibling);
-        parent.insertBefore(node,
+
+        if (parent) {
+          parent.insertBefore(node,
                             previous ? previous.nextSibling : parent.firstChild);
+        }
       }
     });
 
